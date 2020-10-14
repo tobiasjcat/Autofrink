@@ -1,0 +1,9 @@
+% if not data:
+	<li>No results!</li>
+% else:
+	%for datum in data:
+	<li>
+		<button onmouseup="gif_this_id( {{ datum[0] }} );">Go!</button> {{ datum[4] }}
+	</li>
+	% end
+% end

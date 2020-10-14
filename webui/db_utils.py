@@ -10,6 +10,7 @@ import sqlite3
 import string
 import sys
 
+
 def fastwrite(instr):
     sys.stdout.write(instr)
     sys.stdout.flush()
@@ -23,7 +24,26 @@ vfiletypes = ["mkv","avi","mp4"]
 
 
 def get_matching_subs(inquery):
-    return c.execute("SELECT * FROM subtitles WHERE payload LIKE ? ORDER BY payload LIMIT 10", ("%{}%".format(inquery), )).fetchall()
+    return c.execute("SELECT rowid, * FROM subtitles WHERE payload LIKE ? ORDER BY payload LIMIT 10", ("%{}%".format(inquery), )).fetchall()
+
+
+def get_gif_details(insubrowid):
+    results = c.execute("""
+SELECT 
+    films.filepath,
+    start_time,
+    end_time,
+    payload
+FROM 
+    subtitles 
+JOIN 
+    films 
+ON 
+    films.rowid = subtitles.film_id 
+WHERE 
+    subtitles.rowid == ?""", (insubrowid, )).fetchone()
+
+    return results
 
 
 
