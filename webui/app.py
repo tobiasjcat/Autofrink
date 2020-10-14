@@ -25,6 +25,7 @@ def main_page():
 
 def main():
     # run(host="0.0.0.0", port=15243, server="eventlet")
+    pprint(db_utils.get_matching_subs("some"))
     return 0
 
 if __name__ == '__main__':

@@ -19,8 +19,13 @@ conn = sqlite3.connect("frink.db")
 # conn = sqlite3.connect(":memory:")
 c = conn.cursor()
 
-
 vfiletypes = ["mkv","avi","mp4"]
+
+
+def get_matching_subs(inquery):
+    return c.execute("SELECT * FROM subtitles WHERE payload LIKE ? ORDER BY payload LIMIT 10", ("%{}%".format(inquery), )).fetchall()
+
+
 
 def insert_subs(infilm, insubtrack):
     # print("Inserting subs for {} from {}".format(infilm, insubtrack))
@@ -45,11 +50,11 @@ def insert_subs(infilm, insubtrack):
         st, et = '',''
         st,et = temp[1].split("-->")
         st, et = st.strip(), et.strip()
-        newval = (fid,st,et,temp[2].strip(), )
+        newval = (fid,st,et,temp[2].strip().replace('\r\n',' '), )
         vals_to_insert.append(newval)
     # pprint(vals_to_insert)
     c.executemany("INSERT INTO subtitles VALUES (?, ?, ?, ?)", vals_to_insert)
-    # conn.commit()
+    conn.commit()
 
 def build_tables():
 
@@ -101,6 +106,7 @@ def main():
     fastwrite("Vacuuming...")
     c.execute("VACUUM")
     fastwrite("Done\n")
+    conn.commit()
 
     nfilms = c.execute("SELECT Count(rowid) FROM films").fetchone()[0]
     nsubs = c.execute("SELECT Count(rowid) FROM subtitles").fetchone()[0]
