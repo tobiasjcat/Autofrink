@@ -8,10 +8,15 @@
 </head>
 <body>
 <div>
-	
+	<h1>Content</h1>
 </div>
 <div>
-	
+	<p>Goes here!</p>
+	<ul>
+		% for datum in data:
+		<li>{{ datum }}</li>
+		% end
+	</ul>
 </div>
 
 </body>
