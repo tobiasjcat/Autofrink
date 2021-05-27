@@ -1,6 +1,19 @@
+@font-face{
+	font-family: 'tombats7';
+	src: url('/static/tombats7.ttf');
+}
+@font-face{
+	font-family: 'hockey';
+	src: url('/static/hockey.ttf');
+}
 body {
-	background-color: #888;
-	color: #ccc;
+	font-family:'hockey';
+	font-size: 150%;
+	font-weight: bold;
+}
+body {
+	background-color: #333;
+	color: #bbb;
 }
 .fullwidth {
 	float: left;
@@ -9,4 +22,8 @@ body {
 .halfwidth {
 	float: left;
 	width: 50%;
+}
+.tbc {
+	font-family: 'tombats7';
+	font-weight: lighter;
 }

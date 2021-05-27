@@ -24,7 +24,7 @@ vfiletypes = ["mkv","avi","mp4"]
 
 
 def get_matching_subs(inquery):
-    return c.execute("SELECT rowid, * FROM subtitles WHERE payload LIKE ? ORDER BY payload LIMIT 10", ("%{}%".format(inquery), )).fetchall()
+    return c.execute("SELECT rowid, * FROM subtitles WHERE payload LIKE ? ORDER BY payload LIMIT 20", ("%{}%".format(inquery), )).fetchall()
 
 
 def get_gif_details(insubrowid):
@@ -70,7 +70,8 @@ def insert_subs(infilm, insubtrack):
         st, et = '',''
         st,et = temp[1].split("-->")
         st, et = st.strip(), et.strip()
-        newval = (fid,st,et,temp[2].strip().replace('\r\n',' '), )
+        # newval = (fid,st,et,temp[2].strip().replace('\r\n',' '), )
+        newval = (fid,st,et,temp[2].strip(), )
         vals_to_insert.append(newval)
     # pprint(vals_to_insert)
     c.executemany("INSERT INTO subtitles VALUES (?, ?, ?, ?)", vals_to_insert)

@@ -9,6 +9,7 @@ import json
 import os
 from pprint import pformat, pprint
 import subprocess
+import time
 import tempfile
 import threading
 
@@ -23,6 +24,10 @@ import db_utils
 def get_rgif(rfile):
     return static_file(rfile, root="results")
 
+@get("/favicon.ico")
+def favicon_only():
+    return static_file("favicon.ico", root="static")
+
 @get("/static/<sfile>")
 def get_stat(sfile):
     return static_file(sfile, root="static")
@@ -31,8 +36,24 @@ def get_stat(sfile):
 def return_query_results(inquery):
     return template("templates/formatted_results.html", data=db_utils.get_matching_subs(inquery))
 
+
+def clean_results_folder():
+    return True
+    #TODO: write this securely
+    # MAX_CACHE_SIZE = 5
+    # mytime = int(time.time())
+    # results_files = os.listdir("results")
+    # if len(results_files) < MAX_CACHE_SIZE:
+    #     return
+    # results_files = sorted(results_files, key=lambda x:os.stat(os.path.abspath("results/{}".format(x)).st_size))
+    # while len(results_files) > MAX_CACHE_SIZE:
+    #     results_files.pop()
+
+
 @get("/api/get_gif_url/<inid>")
 def api_get_gif(inid):
+    clean_results_folder()
+
     db_results = db_utils.get_gif_details(inid)
 
     special_chars = " ()[]"
