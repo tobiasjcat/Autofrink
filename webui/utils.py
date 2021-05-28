@@ -53,7 +53,7 @@ def string_cleaner(instr):
 
     return retval
 
-def build_ffmpeg_line(instr,indur):
+def build_ffmpeg_line(instr, indur):
     requested_dur = str_to_delta(indur)
     cleaned_input = string_cleaner(instr).lower()
     total_syllables = num_syllables(cleaned_input)
@@ -68,7 +68,8 @@ SELECT
     start_time,
     end_time,
     payload,
-    duration
+    duration,
+    wordlevel_subtitles.rowid
 FROM
     wordlevel_subtitles
 JOIN
@@ -89,7 +90,7 @@ ORDER BY
             if match_delta < closest_delta:
                 closest_match = match
                 closest_delta = match_delta
-        retval.append([ \
+        retval.append((closest_match[5],[ \
             "ffmpeg", \
             "-y", \
             "-ss", \
@@ -104,7 +105,7 @@ ORDER BY
             "-loglevel", \
             "panic", \
             "results/clipfolder/{:0>5}.mp4".format(str(clip_count))
-            ])
+            ]))
         clip_count += 1
         # print("query         :",word, word_dur)
         # print("closest match :",closest_match)
@@ -123,6 +124,10 @@ ORDER BY
 
     return retval
 
+def create_clips_from_commands(incmds,mods=[]):
+    for res in incmds:
+        subprocess.call(res[1])
+    return [x[0] for x in incmds]
 
 def main():
     # print(build_ffmpeg_line("One FOR the.,\t\r\n)!(*#)(@&!) money!","00:00:10,000"))

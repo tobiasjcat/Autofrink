@@ -34,6 +34,10 @@ def favicon_only():
 def get_stat(sfile):
     return static_file(sfile, root="static")
 
+@get("/clips/<cfile>")
+def get_clip_video(cfile):
+    return static_file(cfile.rsplit('-')[0], root="results/clipfolder")
+
 @get("/api/get_query_results/<inquery>")
 def return_query_results(inquery):
     return template("templates/formatted_results.html", data=db_utils.get_matching_subs(inquery))
@@ -121,10 +125,20 @@ def api_get_gif(inid):
 def main_page():
     return template("templates/index.html")
 
+@get("/words")
+def word_page():
+    return template("templates/words.html")
 
+@get("/api/get_words_results/<instr>")
+def api_word_query(instr):
+    results = utils.build_ffmpeg_line(instr,"00:00:08,000")
+    clip_ids = utils.create_clips_from_commands(results)
+    retval = ["clips/{:0>5}.mp4".format(x) for x in range(len(results))]
+    retval = zip(retval,clip_ids)
+    return template("templates/word_clips.html",clips=retval)
 
 def main():
-    run(host="0.0.0.0", port=15243, server="eventlet")
+    run(host="127.0.0.1", port=15243, server="eventlet")
     # pprint(db_utils.get_matching_subs("some"))
     # api_get_gif(1000)
     return 0
