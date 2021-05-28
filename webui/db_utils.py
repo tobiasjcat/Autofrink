@@ -8,32 +8,12 @@ from datetime import timedelta
 from operator import itemgetter
 import os
 from pprint import pformat, pprint
-import pyphen
 import sqlite3
 import string
 import sys
 
+import utils
 
-def fastwrite(instr):
-    sys.stdout.write(instr)
-    sys.stdout.flush()
-
-
-def str_to_delta(instr):
-    timefields = instr.split(':')#dont forget miliseconds
-    secs,mss = timefields[2].split(',')
-    # print(timefields, secs, mss)
-    retval = timedelta( \
-        hours=int(timefields[0]), \
-        minutes=int(timefields[1]), \
-        seconds=int(secs), \
-        milliseconds=int(mss) \
-    )
-
-    return retval
-
-def delta_to_str(indelta):
-    return '0' + str(indelta).replace('.',',')[:-3]
 
 
 conn = sqlite3.connect("frink.db")
@@ -42,7 +22,7 @@ c = conn.cursor()
 
 vfiletypes = ["mkv","avi","mp4"]
 
-pdic = pyphen.Pyphen(lang="en")
+one_millisecond = timedelta(milliseconds=1)
 
 def get_matching_subs(inquery):
     return c.execute("SELECT rowid, * FROM subtitles WHERE payload LIKE ? ORDER BY payload LIMIT 20", ("%{}%".format(inquery), )).fetchall()
@@ -148,7 +128,8 @@ CREATE TABLE wordlevel_subtitles (
     film_id INT,
     start_time TEXT,
     end_time TEXT,
-    payload TEXT)
+    payload TEXT,
+    duration TEXT)
 """)
     all_subs = c.execute( \
         # "SELECT film_id, start_time, end_time, payload FROM subtitles LIMIT 2000")
@@ -169,61 +150,65 @@ CREATE TABLE wordlevel_subtitles (
             line = ''.join(tempres).lower()
             line = ' '.join([x for x in line.split(' ') if x])
             clean_lines.append(line)
-            # pprint([line,str_to_delta(texts[lidx][1]),str_to_delta(texts[lidx][2])])
-            line_duration = str_to_delta(texts[lidx][2]) - str_to_delta(texts[lidx][1])
-            line_num_syllables = len(pdic.inserted(line.replace(' ','-')).split('-'))
-            # print(line,line_duration,line_num_syllables)
+            line_duration = utils.str_to_delta(texts[lidx][2]) - utils.str_to_delta(texts[lidx][1])
+            line_num_syllables = utils.num_syllables(line)
             syllable_delta = line_duration / line_num_syllables
-            start_delta = str_to_delta(texts[lidx][1])
+            start_delta = utils.str_to_delta(texts[lidx][1])
             insert_values = []
             for cword in line.split(' '):
-                cword_dur = len(pdic.inserted(cword).split('-')) * syllable_delta
+                cword_dur = utils.num_syllables(cword) * syllable_delta
 
                 new_end = start_delta + cword_dur
-                # print("HERE",cword,cword_dur, start_delta, new_end)
-                insert_values.append((texts[lidx][0],delta_to_str(start_delta),delta_to_str(new_end),cword,))
+                cword_start, cword_end = utils.delta_to_str(start_delta), utils.delta_to_str(new_end)
+                cword_dur_str = utils.delta_to_str(cword_dur)
+                if cword_dur_str != "00:00":
+                    insert_values.append( \
+                        (texts[lidx][0], \
+                        cword_start, \
+                        cword_end, \
+                        cword, \
+                        cword_dur_str,))
                 start_delta = new_end
-            d.executemany("INSERT INTO wordlevel_subtitles VALUES (?,?,?,?)", insert_values)
+            d.executemany("INSERT INTO wordlevel_subtitles VALUES (?,?,?,?,?)", insert_values)
 
 
-        fastwrite('\r')
-        fastwrite("Inserting words..."+ str(d.execute("SELECT Count(*) FROM wordlevel_subtitles").fetchall()[0][0]))
+        utils.fastwrite('\r')
+        utils.fastwrite("Inserting words..."+ str(d.execute("SELECT Count(*) FROM wordlevel_subtitles").fetchall()[0][0]))
         texts = all_subs.fetchmany(SUBCHUNK_SIZE)
 
-    fastwrite("\rInserting words...Done                       \n")
-    fastwrite("Indexing words...")
+    utils.fastwrite("\rInserting words...Done                       \n")
+    utils.fastwrite("Indexing words...")
     d.execute("CREATE INDEX widx ON wordlevel_subtitles(payload)")
-    fastwrite("Done\n")
+    d.execute("CREATE INDEX wdidx ON wordlevel_subtitles(payload, duration)")
+    utils.fastwrite("Done\n")
 
     conn.commit()
 
 
 
 def main():
-    fastwrite("Dropping old data...")
+    utils.fastwrite("Dropping old data...")
     c.execute("DROP TABLE IF EXISTS films")
     c.execute("DROP TABLE IF EXISTS subtitles")
     c.execute("DROP TABLE IF EXISTS wordlevel_subtitles")
-    fastwrite("Done\n")
+    utils.fastwrite("Done\n")
 
-    fastwrite("Building new data...")
+    utils.fastwrite("Building new data...")
     build_tables()
-    fastwrite("Done\n")
+    utils.fastwrite("Done\n")
 
 
-    fastwrite("Indexing...")
+    utils.fastwrite("Indexing...")
     c.execute("CREATE INDEX fidx ON films(filepath)")
     c.execute("CREATE INDEX sindex1 ON subtitles(film_id)")
     c.execute("CREATE INDEX sindex2 ON subtitles(payload)")
-    fastwrite("Done\n")
+    utils.fastwrite("Done\n")
 
-    # fastwrite("Building word database...")
     build_word_tables()
-    # fastwrite("Done\n")
 
-    fastwrite("Vacuuming...")
+    utils.fastwrite("Vacuuming...")
     c.execute("VACUUM")
-    fastwrite("Done\n")
+    utils.fastwrite("Done\n")
     conn.commit()
 
     nfilms = c.execute("SELECT Count(rowid) FROM films").fetchone()[0]

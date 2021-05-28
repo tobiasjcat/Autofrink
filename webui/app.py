@@ -8,6 +8,7 @@ from bottle import get, run, static_file, template
 import json
 import os
 from pprint import pformat, pprint
+import pyphen
 import subprocess
 import time
 import tempfile
@@ -16,9 +17,10 @@ import threading
 
 #HOW TO RAMPART
 #sudo mount -t tmpfs tmpfs results/ -o size=3g
-
+#mkdir results/clipfolder
 
 import db_utils
+import utils
 
 @get("/results/<rfile>")
 def get_rgif(rfile):
@@ -80,6 +82,8 @@ def api_get_gif(inid):
         db_results[2].split(',')[0], \
         "-i", \
         '{}'.format(film_path), \
+        "-c",\
+        "copy",\
         "-vf", \
         # 'subtitles={}'.format(srt_path), \
         'subtitles={}'.format(outfile), \
@@ -102,6 +106,7 @@ def api_get_gif(inid):
     exec_worker.start()
     exec_worker.join(20)
 
+
     try:
         thread_results = os.stat(outpath)
         if thread_results.st_size == 0:
@@ -115,6 +120,8 @@ def api_get_gif(inid):
 @get("/index.html")
 def main_page():
     return template("templates/index.html")
+
+
 
 def main():
     run(host="0.0.0.0", port=15243, server="eventlet")
