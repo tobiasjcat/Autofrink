@@ -137,7 +137,10 @@ def api_word_query():
     instr = payload["query"]
     vocab_table = payload["vocab_results_table"]
     # print("THERE",pformat(vocab_table))
-    vocab_table = list(map(itemgetter(1),vocab_table))
+    if vocab_table is not None:
+        vocab_table = list(map(itemgetter(1),vocab_table))
+    else:
+        vocab_table = []
     results = utils.build_ffmpeg_line(instr,"00:00:08,000", vocab_table)
     # results = utils.build_ffmpeg_line(instr)
     clip_ids = utils.create_clips_from_commands(results)
