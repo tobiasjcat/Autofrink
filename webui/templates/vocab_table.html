@@ -1,0 +1,13 @@
+<table>
+  <tbody>
+    <tr>
+      <th>Clip</th><th>Count</th>
+    </tr>
+    % for i,j in results:
+    <tr>
+      <td>{{ i }}</td><td>{{ j }}</td>
+    </tr>
+    % end
+  </tbody>
+</table>
+<input type="hidden" id="hidden_json_results" value="{{ asjson }}">

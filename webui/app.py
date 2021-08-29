@@ -3,9 +3,10 @@
 #Paul Croft
 #October 13, 2020
 
-from bottle import get, run, static_file, template
+from bottle import get, post, request, run, static_file, template
 
 import json
+from operator import itemgetter
 import os
 from pprint import pformat, pprint
 import pyphen
@@ -86,8 +87,8 @@ def api_get_gif(inid):
         db_results[2].split(',')[0], \
         "-i", \
         '{}'.format(film_path), \
-        "-c",\
-        "copy",\
+        # "-c",\
+        # "copy",\
         "-vf", \
         # 'subtitles={}'.format(srt_path), \
         'subtitles={}'.format(outfile), \
@@ -104,7 +105,7 @@ def api_get_gif(inid):
         outpath, \
     ]
 
-    # pprint(toexec)
+    # print(' '.join(toexec))
 
     exec_worker = threading.Thread(target=subprocess.call, args=[toexec])
     exec_worker.start()
@@ -129,13 +130,26 @@ def main_page():
 def word_page():
     return template("templates/words.html")
 
-@get("/api/get_words_results/<instr>")
-def api_word_query(instr):
-    results = utils.build_ffmpeg_line(instr,"00:00:08,000")
+@post("/api/get_words_results/")
+def api_word_query():
+    payload = json.loads(request.body.read())
+    # pprint(payload)
+    instr = payload["query"]
+    vocab_table = payload["vocab_results_table"]
+    # print("THERE",pformat(vocab_table))
+    vocab_table = list(map(itemgetter(1),vocab_table))
+    results = utils.build_ffmpeg_line(instr,"00:00:08,000", vocab_table)
+    # results = utils.build_ffmpeg_line(instr)
     clip_ids = utils.create_clips_from_commands(results)
     retval = ["clips/{:0>5}.mp4".format(x) for x in range(len(results))]
     retval = zip(retval,clip_ids)
     return template("templates/word_clips.html",clips=retval)
+
+
+@get("/api/get_clip_vocabs/<instr>")
+def api_clip_vocabs(instr):
+    results = utils.check_vocab(instr)
+    return template("templates/vocab_table.html", results=results, asjson=json.dumps(results))
 
 def main():
     run(host="127.0.0.1", port=15243, server="eventlet")

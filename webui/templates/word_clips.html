@@ -3,10 +3,14 @@
   <h2>Something went wrong!</h2>
 % else:
   % for clip in clips:
-  <h2>{{ clip[1] }}</h2>
-  <video width="320" height="240" controls="all">
-    <source src="{{ clip[0] }}-{{ clip[1] }}" type="video/mp4">
-  </video>
+  <div>
+    <h2 class="mv0">{{ clip[1] }}</h2>
+    <video width="320" height="240" controls="all">
+      <source src="{{ clip[0] }}-{{ clip[1] }}" type="video/mp4">
+    </video>
+  </div>
+
+  </div>
   % end
 % end
 </div>

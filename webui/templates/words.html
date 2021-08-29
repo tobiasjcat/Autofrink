@@ -13,7 +13,9 @@
 <div class="fullwidth">
 	<div class="halfwidth">
 		<div>
-			<p>Search: <input type="text" id="search_bar"/></p>
+			<p>Search: <input type="text" id="search_bar" onmouseup="check_clip_vocabularys()"/></p>
+			<p id="best_match_area"></p>
+			<p>Mods:<code id="mod_area">{}</code></p>
       <button type="button" name="go_button" onmouseup="create_clips_from_str()">Go!</button>
 		</div>
 		<div>
