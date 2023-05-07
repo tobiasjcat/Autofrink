@@ -155,7 +155,8 @@ def api_clip_vocabs(instr):
     return template("templates/vocab_table.html", results=results, asjson=json.dumps(results))
 
 def main():
-    run(host="127.0.0.1", port=15243, server="eventlet")
+#    run(host="127.0.0.1", port=15243, server="eventlet")
+    run(host="0.0.0.0", port=15243, server="eventlet")
     # pprint(db_utils.get_matching_subs("some"))
     # api_get_gif(1000)
     return 0
